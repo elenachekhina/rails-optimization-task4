@@ -196,22 +196,58 @@ NewRelic:
 | Other                                       | 109   | 38.68 ms    | 14.54%     | 0          |
 ```
 
-В целом, без конкурентности запрос укладывается в бюджет.
+В целом, без прараллельности запрос укладывается в бюджет, проверим будет ли укладывтаься в бюджет с прараллельностью в local_production.
 Однако было бы неплохо разобравться почему так происходит. Мое предположение, что это происходит из-за блокировки обших ресурсов. Например базы данных.
 
 ## Часть 2
 
 Сделаем окружение local_production и проверим скорость на нем
+```
+Server Software:
+Server Hostname:        localhost
+Server Port:            3000
 
+Document Path:          /?pp=disable
+Document Length:        136405 bytes
 
+Concurrency Level:      5
+Time taken for tests:   3.745 seconds
+Complete requests:      100
+Failed requests:        0
+Total transferred:      13684800 bytes
+HTML transferred:       13640500 bytes
+Requests per second:    26.70 [#/sec] (mean)
+Time per request:       187.251 [ms] (mean)
+Time per request:       37.450 [ms] (mean, across all concurrent requests)
+Transfer rate:          3568.48 [Kbytes/sec] received
 
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        1    2   0.7      2       5
+Processing:   107  175  48.3    163     336
+Waiting:      103  169  48.2    156     336
+Total:        109  177  48.1    166     337
 
+Percentage of the requests served within a certain time (ms)
+  50%    166
+  66%    180
+  75%    192
+  80%    208
+  90%    265
+  95%    287
+  98%    330
+  99%    337
+ 100%    337 (longest request)
+```
+NewRelic:
+180 ms              Average response time
+130 ms              Median response time
+254 ms              95th percentile response time
+332 ms              99th percentile response time
+0.99                Apdex score
+0.33 %              Average error rate
+10 rpm              Average throughput
 
 ## Результаты
-В результате проделанной оптимизации наконец удалось обработать файл с данными.
-Удалось улучшить метрику системы с *того, что у вас было в начале, до того, что получилось в конце* и уложиться в заданный бюджет.
-
-*Какими ещё результами можете поделиться*
-
-## Защита от регрессии производительности
-Для защиты от потери достигнутого прогресса при дальнейших изменениях программы *о performance-тестах, которые вы написали*
+В результате проделанной оптимизации удалось ускорить загрузку до ~1 секунды в development окружении.
+В local_production время ускорилось до ~0.2 секунд

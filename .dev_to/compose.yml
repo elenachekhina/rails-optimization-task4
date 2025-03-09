@@ -58,12 +58,20 @@ services:
 
   web:
     <<: *backend
-    command: bundle exec rails server -b 0.0.0.0
+    command: >
+      bash -c '
+        if [ "$RAILS_ENV" = "local_production" ]; then
+          NODE_ENV=production bundle exec rake assets:precompile
+        fi
+        bundle exec rails server -b 0.0.0.0
+      '
     ports:
       - '3000:3000'
     depends_on:
+      <<: *backend_depends_on
       webpacker:
         condition: service_started
+        required: false
       # sidekiq:
       #   condition: service_started
 
@@ -113,6 +121,8 @@ services:
       <<: *env
       WEBPACKER_DEV_SERVER_HOST: 0.0.0.0
       YARN_CACHE_FOLDER: /app/node_modules/.yarn-cache
+    profiles:
+      - development
 
 volumes:
   bundle:
